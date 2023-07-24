@@ -1,0 +1,13 @@
+{
+  "dependencies": {
+    "@onflow/fcl": "^1.4.1",
+    "cadence-to-json": "^1.0.3",
+    "elliptic": "^6.5.4",
+    "express": "^4.18.2",
+    "sha3": "^2.1.4",
+    "socket.io": "^4.7.1"
+  },
+  "scripts": {
+    "start": "node GameRunner.js"
+  }
+}
