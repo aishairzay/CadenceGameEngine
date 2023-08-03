@@ -5,6 +5,7 @@ import "GamePieces"
 pub contract AsteroidsGame {
 
   pub struct Level1: GameEngine.Level {
+    pub let state: {String: String}
     pub let extras: {String: AnyStruct}
     
     pub fun textToTypeMap(): {String: GameEngine.GameObjectType} {
@@ -60,8 +61,7 @@ pub contract AsteroidsGame {
     }
 
     init() {
-      // time in MS between ticks
-      // 50 ms speed between ticks = 20 ticks per second
+      self.state = {}
       self.extras = {}
       self.extras["tickSpeed"] = 200
       self.extras["score"] = 0
@@ -70,6 +70,7 @@ pub contract AsteroidsGame {
   }
 
   pub struct Level2: GameEngine.Level {
+    pub let state: {String: String}
     pub let extras: {String: AnyStruct}
     
     pub fun textToTypeMap(): {String: GameEngine.GameObjectType} {
@@ -127,8 +128,7 @@ pub contract AsteroidsGame {
     }
 
     init() {
-      // time in MS between ticks
-      // 50 ms speed between ticks = 20 ticks per second
+      self.state = {}
       self.extras = {}
       self.extras["tickSpeed"] = 10
       self.extras["score"] = 0

@@ -1,6 +1,7 @@
 import "GameEngine"
 
 pub contract GamePieces {
+  
   pub struct SideScrollPlayer: GameEngine.GameObject {
     pub var doesTick: Bool
     pub var lastMoveTick: UInt64?
@@ -83,6 +84,44 @@ pub contract GamePieces {
       }
 
       return newGameboard
+    }
+
+    init() {
+      self.doesTick = true
+    }
+  }
+
+  pub struct Consumable: GameEngine.GameObject {
+    pub var doesTick: Bool
+    
+    pub fun tick(
+      input: GameEngine.GameTickInput,
+      callbacks: {String: AnyStruct}
+    ): [[AnyStruct{GameEngine.GameObject}?]] {
+      let position: [Int] = (callbacks["getPosition"] as! ((): [Int])?)!()
+      let curRow = position[0]
+      let curCol = position[1]
+
+      return input.gameboard
+    }
+
+    init() {
+      self.doesTick = true
+    }
+  }
+
+  pub struct SnakeTail: GameEngine.GameObject {
+    pub var doesTick: Bool
+    
+    pub fun tick(
+      input: GameEngine.GameTickInput,
+      callbacks: {String: AnyStruct}
+    ): [[AnyStruct{GameEngine.GameObject}?]] {
+      let position: [Int] = (callbacks["getPosition"] as! ((): [Int])?)!()
+      let curRow = position[0]
+      let curCol = position[1]
+
+      return input.gameboard
     }
 
     init() {

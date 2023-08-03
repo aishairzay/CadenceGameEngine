@@ -53,6 +53,7 @@
 				"emulator": "f8d6e0586b0a20c7"
 			}
 		},
+		"SnakeGame": "cadence/contracts/SnakeGame.cdc",
 		"StringUtils": "cadence/contracts/StringUtils.cdc"
 	},
 	"networks": {
@@ -74,11 +75,12 @@
 		"emulator": {
 			"default": [
 				"ArrayUtils",
+				"AsteroidsGame",
 				"GameBoardUtils",
 				"GameEngine",
 				"GamePieces",
-				"StringUtils",
-				"AsteroidsGame"
+				"SnakeGame",
+				"StringUtils"
 			]
 		}
 	}

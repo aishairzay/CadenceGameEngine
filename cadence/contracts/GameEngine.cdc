@@ -31,11 +31,13 @@ pub contract GameEngine {
     pub let tickCount: UInt64
     pub var gameboard: [[AnyStruct{GameObject}?]]
     pub let events: [PlayerEvent]
+    pub let state: {String: String}
 
-    init(tickCount: UInt64, gameboard: [[AnyStruct{GameObject}?]], events: [PlayerEvent]) {
+    init(tickCount: UInt64, gameboard: [[AnyStruct{GameObject}?]], events: [PlayerEvent], state: {String: String}) {
       self.tickCount = tickCount
       self.gameboard = gameboard
       self.events = events
+      self.state = state
     }
   }
 
@@ -50,6 +52,7 @@ pub contract GameEngine {
   }
 
   pub struct interface Level {
+    pub let state: {String: String}
     pub let extras: {String: AnyStruct}
   
     pub fun createInitialGameboard(numPlayers: Int): [[AnyStruct{GameEngine.GameObject}?]]
@@ -80,7 +83,8 @@ pub contract GameEngine {
               input: GameEngine.GameTickInput(
                 tickCount: input.tickCount,
                 gameboard: gameboard,
-                events: input.events
+                events: input.events,
+                state: input.state
               ),
               callbacks: callbacks
             )
@@ -122,7 +126,8 @@ pub contract GameEngine {
       gameboard = self.levels[levelIndex].postTick(input: GameTickInput(
         tickCount: input.tickCount,
         gameboard: gameboard,
-        events: input.events
+        events: input.events,
+        state: input.state
       ))
       return GameTickOutput(
         tickCount: input.tickCount + 1,

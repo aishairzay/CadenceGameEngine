@@ -24,13 +24,24 @@ pub fun main(address: Address, levelIndex: Int, lastTick: UInt64, board: String,
         GameEngine.PlayerEvent(type: "right")
       )
     }
+    if (e == "down") {
+      parsedEvents.append(
+        GameEngine.PlayerEvent(type: "down")
+      )
+    }
+    if (e == "up") {
+      parsedEvents.append(
+        GameEngine.PlayerEvent(type: "up")
+      )
+    }
   }
 
   let gameOutput = gamePublic.tickLevel(levelIndex: levelIndex, input: 
     GameEngine.GameTickInput(
       tickCount: lastTick,
       gameboard: GameBoardUtils.convertStringToGameboard(board: board, conversionMap: conversionMap),
-      events: parsedEvents
+      events: parsedEvents,
+      state: {}
     )
   )
 
