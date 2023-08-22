@@ -27,7 +27,9 @@
 			}
 		},
 		"GameBoardUtils": "cadence/contracts/GameBoardUtils.cdc",
+		"GameCatalog": "cadence/contracts/GameCatalog.cdc",
 		"GameEngine": "cadence/contracts/GameEngine.cdc",
+		"GameLevels": "cadence/contracts/GameLevels.cdc",
 		"GamePieces": "cadence/contracts/GamePieces.cdc",
 		"MetadataViews": {
 			"source": "",
@@ -53,8 +55,9 @@
 				"emulator": "f8d6e0586b0a20c7"
 			}
 		},
-		"SnakeGame": "cadence/contracts/SnakeGame.cdc",
-		"StringUtils": "cadence/contracts/StringUtils.cdc"
+		"StringUtils": "cadence/contracts/StringUtils.cdc",
+		"Tetris": "cadence/contracts/Tetris.cdc",
+		"TraditionalTetrisPieces": "cadence/contracts/TraditionalTetrisPieces.cdc"
 	},
 	"networks": {
 		"emulator": "127.0.0.1:3569",
@@ -77,10 +80,13 @@
 				"ArrayUtils",
 				"AsteroidsGame",
 				"GameBoardUtils",
+				"GameCatalog",
 				"GameEngine",
+				"GameLevels",
 				"GamePieces",
-				"SnakeGame",
-				"StringUtils"
+				"StringUtils",
+				"Tetris",
+				"TraditionalTetrisPieces"
 			]
 		}
 	}

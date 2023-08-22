@@ -48,7 +48,8 @@ pub contract GameBoardUtils {
           continue
         }
         let o = board[i]![j]!
-        let identifier = o.getType().identifier
+        //let identifier = o.getType().identifier
+        let identifier = ""
         let letter = conversionMap[identifier]!
         row = StringUtils.join([row, letter], "")
         j = j + 1

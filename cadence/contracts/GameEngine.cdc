@@ -1,12 +1,22 @@
+import "GameLevels"
+
 pub contract GameEngine {
 
   pub struct interface GameObject {
+    pub var id: UInt64
+    pub var type: String
     pub var doesTick: Bool
+    pub var referencePoint: [Int]
+    pub var relativePositions: [[Int]]
+    pub var rotation: Int?
+
+    pub fun toMap(): {String: AnyStruct}
+    pub fun fromMap(_ map: {String: AnyStruct})
 
     pub fun tick(
       input: GameTickInput,
-      callbacks: {String: AnyStruct}
-    ): [[AnyStruct{GameObject}?]]
+      gameboard: [[{GameObject}?]]
+    ): GameTickOutput
   }
 
   pub struct GameObjectType {
@@ -29,13 +39,13 @@ pub contract GameEngine {
 
   pub struct GameTickInput {
     pub let tickCount: UInt64
-    pub var gameboard: [[AnyStruct{GameObject}?]]
+    pub var objects: [{GameObject}?]
     pub let events: [PlayerEvent]
     pub let state: {String: String}
 
-    init(tickCount: UInt64, gameboard: [[AnyStruct{GameObject}?]], events: [PlayerEvent], state: {String: String}) {
+    init(tickCount: UInt64, objects: [{GameObject}?], events: [PlayerEvent], state: {String: String}) {
       self.tickCount = tickCount
-      self.gameboard = gameboard
+      self.objects = objects
       self.events = events
       self.state = state
     }
@@ -43,105 +53,100 @@ pub contract GameEngine {
 
   pub struct GameTickOutput {
     pub let tickCount: UInt64
-    pub var gameboard: [[AnyStruct{GameObject}?]]
+    pub var objects: [{GameObject}?]
+    pub var gameboard: [[{GameObject}?]]
+    pub let state: {String: String}
 
-    init(tickCount: UInt64, gameboard: [[AnyStruct{GameObject}?]]) {
+    init(tickCount: UInt64, objects: [{GameObject}?], gameboard:[[{GameObject}?]], state: {String: String}) {
       self.tickCount = tickCount
+      self.objects = objects
       self.gameboard = gameboard
+      self.state = state
     }
   }
 
   pub struct interface Level {
+    // State is data meant to be carried between ticks
+    // as both input and output
     pub let state: {String: String}
+
+    // Extras is data that is not meant to be carried between ticks
+    // and is only used as output from a tick to the client
     pub let extras: {String: AnyStruct}
-  
-    pub fun createInitialGameboard(numPlayers: Int): [[AnyStruct{GameEngine.GameObject}?]]
-    pub fun getCallbacks(): {String: AnyStruct}
-    pub fun textToTypeMap(): {String: GameObjectType} {
-      return {}
-    }
+
+    pub fun createInitialGameObjects(): [{GameObject}?]
+    pub fun createGameboardFromObjects(_ gameObjects: [{GameObject}?]): [[{GameObject}?]]
+    pub fun parseGameObjectsFromMap(_ map: {String: AnyStruct}): [{GameObject}?]
 
     // Default implementation of tick is to tick on all contained
     // game objects that have doesTick set to true
-    pub fun tick(input: GameTickInput): [[AnyStruct{GameObject}?]] {
-      var gameboard = input.gameboard
-      let tickCount = input.tickCount
-      let events = input.events
-      var i = 0
-      var callbacks = self.getCallbacks()
-
-      while (i < gameboard.length) {
-        var j = 0
-        while (j < gameboard[i]!.length) {
-          let t = gameboard[i]![j]
-          if (t != nil && t!.doesTick) {
-
-            callbacks["getPosition"] = (fun (): [Int] {
-              return [i, j]
-            })
-            gameboard = t!.tick(
-              input: GameEngine.GameTickInput(
-                tickCount: input.tickCount,
-                gameboard: gameboard,
-                events: input.events,
-                state: input.state
-              ),
-              callbacks: callbacks
-            )
-          }
-          j = j + 1
-        }
-        i = i + 1
-      }
-
-      return gameboard
-    }
-
-    pub fun postTick(input: GameTickInput): [[AnyStruct{GameObject}?]]
-  }
-
-  pub resource interface GamePublic {
-    pub fun getLevel(levelIndex: Int): AnyStruct{Level}
-    pub fun startLevel(levelIndex: Int): GameTickOutput
-    pub fun tickLevel(levelIndex: Int, input: GameTickInput): GameTickOutput
-  }
-
-  pub resource Game: GamePublic {
-    pub let levels: [AnyStruct{Level}]
-
-    pub fun getLevel(levelIndex: Int): AnyStruct{Level} {
-      return self.levels[levelIndex]!
-    }
-
-    pub fun startLevel(levelIndex: Int): GameTickOutput {
-      let board: [[AnyStruct{GameEngine.GameObject}?]] = self.levels[levelIndex].createInitialGameboard(numPlayers: 1)
+    pub fun tick(input: GameTickInput, gameboard: [[{GameObject}?]]): GameTickOutput {
       return GameTickOutput(
-        tickCount: 0,
-        gameboard: board
-      )
-    }
-
-    pub fun tickLevel(levelIndex: Int, input: GameTickInput): GameTickOutput {
-      var gameboard = self.levels[levelIndex].tick(input: input)
-      gameboard = self.levels[levelIndex].postTick(input: GameTickInput(
         tickCount: input.tickCount,
+        objects: input.objects,
         gameboard: gameboard,
-        events: input.events,
         state: input.state
-      ))
-      return GameTickOutput(
-        tickCount: input.tickCount + 1,
-        gameboard: gameboard
       )
     }
 
-    init(levels: [AnyStruct{Level}]) {
-      self.levels = levels
+    // Default implementation of postTick is to do nothing
+    pub fun postTick(input: GameTickInput, gameboard: [[{GameObject}?]]): GameTickOutput {
+      return GameTickOutput(
+        tickCount: input.tickCount,
+        objects: input.objects,
+        gameboard: gameboard,
+        state: input.state
+      )
     }
   }
 
-  pub fun createNewGame(levels: [AnyStruct{Level}]): @Game {
-    return <-create Game(levels: levels)
+  pub fun startLevel(contractAddress: Address, contractName: String, levelName: String): GameTickOutput {
+    let gameLevels: &GameLevels = getAccount(contractAddress).contracts.borrow<&GameLevels>(name: contractName)
+      ?? panic("Could not borrow a reference to the GameLevels contract")
+    let level: {Level} = gameLevels.createLevel(levelName)! as! {Level}
+
+    // Create the initial objects for the game. This will create a new list of game objects
+    let objects: [AnyStruct{GameObject}?] = level.createInitialGameObjects()
+
+    let gameboard: [[{GameObject}?]] = level.createGameboardFromObjects(objects)
+
+    return GameTickOutput(
+      tickCount: 0,
+      objects: objects,
+      gameboard: gameboard,
+      state: level.state
+    )
+  }
+
+  pub fun getLevel(contractAddress: Address, contractName: String, levelName: String): {Level} {
+    let gameLevels: &GameLevels = getAccount(contractAddress).contracts.borrow<&GameLevels>(name: contractName)
+      ?? panic("Could not borrow a reference to the GameLevels contract")
+    let level: {Level} = gameLevels.createLevel(levelName) as! {Level}
+    return level
+  }
+
+  pub fun tickLevel(contractAddress: Address, contractName: String, levelName: String, input: GameTickInput): GameTickOutput {
+    let gameLevels: &GameLevels = getAccount(contractAddress).contracts.borrow<&GameLevels>(name: contractName)
+      ?? panic("Could not borrow a reference to the GameLevels contract")
+    let level: {Level} = gameLevels.createLevel(levelName) as! {Level}
+    let gameboard: [[{GameObject}?]] = level.createGameboardFromObjects(input.objects)
+
+    var gameOutput: GameTickOutput = level.tick(input: input, gameboard: gameboard)
+    gameOutput = level.postTick(
+      input: GameTickInput(
+        tickCount: gameOutput.tickCount,
+        objects: gameOutput.objects,
+        events: input.events,
+        state: gameOutput.state
+      ),
+      gameboard: gameOutput.gameboard
+    )
+    return GameTickOutput(
+      tickCount: input.tickCount + 1,
+      objects: gameOutput.objects,
+      gameboard: gameOutput.gameboard,
+      state: gameOutput.state
+    )
   }
 
 }

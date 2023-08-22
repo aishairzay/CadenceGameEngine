@@ -1,7 +1,7 @@
 import "GameEngine"
 
 pub contract GamePieces {
-  
+  /*
   pub struct SideScrollPlayer: GameEngine.GameObject {
     pub var doesTick: Bool
     pub var lastMoveTick: UInt64?
@@ -128,4 +128,5 @@ pub contract GamePieces {
       self.doesTick = true
     }
   }
+  */
 }

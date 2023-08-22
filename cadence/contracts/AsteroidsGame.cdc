@@ -1,9 +1,10 @@
+import "GameLevels"
 import "GameEngine"
 import "GameBoardUtils"
 import "GamePieces"
 
-pub contract AsteroidsGame {
-
+pub contract AsteroidsGame: GameLevels {
+  /*
   pub struct Level1: GameEngine.Level {
     pub let state: {String: String}
     pub let extras: {String: AnyStruct}
@@ -135,4 +136,21 @@ pub contract AsteroidsGame {
       self.extras["message"] = ""
     }
   }
+   
+
+  pub fun getAvailableLevels(): [String] {
+    return [
+      "Level1",
+      "Level2"
+    ]
+  }
+
+  pub fun createLevel(name: String): AnyStruct? {
+    switch name {
+      case "Level1":
+        return nil
+    }
+    return nil
+  }*/
+
 }
