@@ -10,8 +10,9 @@ pub contract Tetris: GameLevels {
     pub var id: UInt64
     pub var type: String
     pub var doesTick: Bool
-    pub var referencePoint: [Int]
     pub var relativePositions: [[Int]]
+    pub var referencePoint: [Int]
+    pub var shape: String
     pub var rotation: Int?
     
     // Tetris-specific fields
@@ -27,34 +28,43 @@ pub contract Tetris: GameLevels {
       self.type = "TetrisPiece"
       self.doesTick = true
       self.referencePoint = [0, 0]
-      self.relativePositions = [[0, 0]]
-      self.rotation = nil
+      self.shape = "L"
+      self.relativePositions = []
+      self.rotation = 0
       self.color = "white"
     }
     
     // This gives the FE a way to represent the object on the board
     // as well s giving it a way to pass the state back into the SC
-    pub fun toMap(): {String: AnyStruct} {
-        return {
-            "id": self.id,
-            "type": self.type,
-            "doesTick": self.doesTick,
-            "referencePoint": self.referencePoint,
-            "relativePositions": self.relativePositions,
-            "rotation": self.rotation,
-            "color": self.color
-        }
+    pub fun toMap(): {String: String} {
+      var doesTick = "false"
+      if (self.doesTick) {
+        doesTick = "true"
+      }
+      return {
+          "id": self.id.toString(),
+          "type": self.type,
+          "doesTick": doesTick,
+          "x": self.referencePoint[0]!.toString(),
+          "y": self.referencePoint[1]!.toString(),
+          "shape": self.shape,
+          "rotation": self.rotation!.toString(),
+          "color": self.color
+      }
     }
-    
+
     // This gives the SC a way to create an object from the FE's representation
-    pub fun fromMap(_ map: {String: AnyStruct}) {
-        self.id = UInt64(map["id"]! as! Int)
-        self.type = map["type"]! as! String
-        self.doesTick = map["doesTick"]! as! Bool
-        self.referencePoint = map["referencePoint"]! as! [Int]
-        self.relativePositions = map["relativePositions"]! as! [[Int]]
-        self.rotation = map["rotation"]! as! Int
-        self.color = map["color"]! as! String
+    pub fun fromMap(_ map: {String: String}) {
+      self.id = UInt64.fromString(map["id"]!)!
+      self.type = map["type"]!
+      self.doesTick = (map["doesTick"]!) == "true"
+      let x = Int.fromString(map["x"]!)
+      let y = Int.fromString(map["y"]!)
+      self.referencePoint = [x!, y!]
+      self.shape = map["shape"]!
+      self.rotation = Int.fromString(map["rotation"]!)
+      self.relativePositions = TraditionalTetrisPieces.getPiece(self.shape, self.rotation!)
+      self.color = map["color"]!
     }
 
     pub fun tick(input: GameEngine.GameTickInput, gameboard: [[{GameEngine.GameObject}?]]): GameEngine.GameTickOutput {
@@ -86,12 +96,13 @@ pub contract Tetris: GameLevels {
       
       tetrisPiece.fromMap(
         {
-          "id": 1,
+          "id": "1",
           "type": "TetrisPiece",
-          "doesTick": true,
-          "referencePoint": [4, 4],
-          "relativePositions": [[0, 0]],
-          "rotation": 0,
+          "doesTick": "true",
+          "x": "4",
+          "y": "4",
+          "shape": "L",
+          "rotation": "0",
           "color": "red"
         }
       )
@@ -100,8 +111,14 @@ pub contract Tetris: GameLevels {
       ]
     }
 
-    pub fun parseGameObjectsFromMap(_ map: {String: AnyStruct}): [{GameEngine.GameObject}?] {
-      return []
+    pub fun parseGameObjectsFromMaps(_ map: [{String: String}]): [{GameEngine.GameObject}?] {
+      let objects: [{GameEngine.GameObject}?] = []
+      for objectMap in map {
+        let object = TetrisPiece()
+        object.fromMap(objectMap)
+        objects.append(object)
+      }
+      return objects
     }
   
     pub fun createGameboardFromObjects(_ gameObjects: [{GameEngine.GameObject}?]): [[{GameEngine.GameObject}?]] {
@@ -135,7 +152,9 @@ pub contract Tetris: GameLevels {
       self.viewWidth = 10
       self.viewHeight = 24
       self.tickRate = 1 // ideal ticks per second from the client
-      self.state = {}
+      self.state = {
+        "score": "0"
+      }
       self.extras = {}
     }
   }

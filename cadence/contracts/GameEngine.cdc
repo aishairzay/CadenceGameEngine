@@ -10,8 +10,8 @@ pub contract GameEngine {
     pub var relativePositions: [[Int]]
     pub var rotation: Int?
 
-    pub fun toMap(): {String: AnyStruct}
-    pub fun fromMap(_ map: {String: AnyStruct})
+    pub fun toMap(): {String: String}
+    pub fun fromMap(_ map: {String: String})
 
     pub fun tick(
       input: GameTickInput,
@@ -76,7 +76,7 @@ pub contract GameEngine {
 
     pub fun createInitialGameObjects(): [{GameObject}?]
     pub fun createGameboardFromObjects(_ gameObjects: [{GameObject}?]): [[{GameObject}?]]
-    pub fun parseGameObjectsFromMap(_ map: {String: AnyStruct}): [{GameObject}?]
+    pub fun parseGameObjectsFromMaps(_ map: [{String: String}]): [{GameObject}?]
 
     // Default implementation of tick is to tick on all contained
     // game objects that have doesTick set to true
@@ -100,6 +100,14 @@ pub contract GameEngine {
     }
   }
 
+  pub fun convertGameObjectsToStrMaps(_ gameObjects: [{GameObject}?]): [{String: String}] {
+    var maps: [{String: String}] = []
+    for gameObject in gameObjects {
+      maps.append(gameObject!.toMap())
+    }
+    return maps
+  }
+
   pub fun startLevel(contractAddress: Address, contractName: String, levelName: String): GameTickOutput {
     let gameLevels: &GameLevels = getAccount(contractAddress).contracts.borrow<&GameLevels>(name: contractName)
       ?? panic("Could not borrow a reference to the GameLevels contract")
@@ -121,14 +129,14 @@ pub contract GameEngine {
   pub fun getLevel(contractAddress: Address, contractName: String, levelName: String): {Level} {
     let gameLevels: &GameLevels = getAccount(contractAddress).contracts.borrow<&GameLevels>(name: contractName)
       ?? panic("Could not borrow a reference to the GameLevels contract")
-    let level: {Level} = gameLevels.createLevel(levelName) as! {Level}
+    let level: {Level} = gameLevels.createLevel(levelName)! as! {Level}
     return level
   }
 
   pub fun tickLevel(contractAddress: Address, contractName: String, levelName: String, input: GameTickInput): GameTickOutput {
     let gameLevels: &GameLevels = getAccount(contractAddress).contracts.borrow<&GameLevels>(name: contractName)
       ?? panic("Could not borrow a reference to the GameLevels contract")
-    let level: {Level} = gameLevels.createLevel(levelName) as! {Level}
+    let level: {Level} = gameLevels.createLevel(levelName)! as! {Level}
     let gameboard: [[{GameObject}?]] = level.createGameboardFromObjects(input.objects)
 
     var gameOutput: GameTickOutput = level.tick(input: input, gameboard: gameboard)
