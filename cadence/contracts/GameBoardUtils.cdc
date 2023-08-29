@@ -1,8 +1,7 @@
-import "GameEngine"
 import "StringUtils"
 
 pub contract GameBoardUtils {
-
+/*
   pub fun flipConversionMap(map: {String: GameEngine.GameObjectType}): {String: String} {
     var conversionMap: {String: String} = {}
     let keys = map.keys
@@ -88,5 +87,5 @@ pub contract GameBoardUtils {
       boardArray.append(row)
     }
     return boardArray
-  }
+  }*/
 }

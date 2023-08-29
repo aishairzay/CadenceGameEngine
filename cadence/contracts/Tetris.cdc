@@ -19,9 +19,9 @@ pub contract Tetris: GameLevels {
     pub var color: String
 
     // Our init creates an unusable empty tetris piece.
-    // Real pieces can be made with `create`
-    // This is our replacement for now having a static constructor
-    // since cadence does not support static constructors yet, and
+    // Real pieces can be made with `fromMap`
+    // This is our replacement for not having a static constructor
+    // since cadence does not support static constructors, and
     // we need to be able to create pieces for the map.
     init() {
       self.id = UInt64(0)
@@ -33,7 +33,7 @@ pub contract Tetris: GameLevels {
       self.rotation = 0
       self.color = "white"
     }
-    
+
     // This gives the FE a way to represent the object on the board
     // as well s giving it a way to pass the state back into the SC
     pub fun toMap(): {String: String} {
@@ -67,25 +67,51 @@ pub contract Tetris: GameLevels {
       self.color = map["color"]!
     }
 
-    pub fun tick(input: GameEngine.GameTickInput, gameboard: [[{GameEngine.GameObject}?]]): GameEngine.GameTickOutput {
-      return GameEngine.GameTickOutput(
-        tickCount: input.tickCount,
-        objects: input.objects,
-        gameboard: gameboard,
-        state: input.state
-      )
+    pub fun tick(
+      tickCount: UInt64,
+      events: [GameEngine.PlayerEvent],
+      level: {GameEngine.Level}
+    ): Bool {
+      var needsRedraw = false
+      for e in events {
+        if (e.type == "ArrowUp") {
+          self.rotation = (self.rotation! + 1) % 4
+          self.relativePositions = TraditionalTetrisPieces.getPiece(self.shape, self.rotation!)
+          needsRedraw = true
+          break
+        }
+        if (e.type == "ArrowRight") {
+          self.referencePoint[1] = self.referencePoint[1]! + 1
+          needsRedraw = true
+          break
+        }
+        if (e.type == "ArrowLeft") {
+          self.referencePoint[1] = self.referencePoint[1]! - 1
+          needsRedraw = true
+          break
+        }
+        if (e.type == "ArrowDown") {
+          self.referencePoint[0] = self.referencePoint[0]! + 1
+          needsRedraw = true
+          break
+        }
+      }
+      return needsRedraw
     }
   }
 
   pub struct StandardLevel: GameEngine.Level {
     // State is data meant to be carried between ticks
     // as both input and output
-    pub let state: {String: String}
+    pub var gameboard: GameEngine.GameBoard
+    pub var objects: { UInt64: {GameEngine.GameObject} }
+
+    pub var state: {String: String}
+
+    pub let tickRate: UInt64
+
     pub let boardWidth: Int
     pub let boardHeight: Int
-    pub let viewWidth: Int
-    pub let viewHeight: Int
-    pub let tickRate: Int
 
     // Extras is data that is not meant to be carried between ticks
     // and is only used as output from a tick to the client
@@ -99,7 +125,7 @@ pub contract Tetris: GameLevels {
           "id": "1",
           "type": "TetrisPiece",
           "doesTick": "true",
-          "x": "4",
+          "x": "0",
           "y": "4",
           "shape": "L",
           "rotation": "0",
@@ -121,41 +147,44 @@ pub contract Tetris: GameLevels {
       return objects
     }
   
-    pub fun createGameboardFromObjects(_ gameObjects: [{GameEngine.GameObject}?]): [[{GameEngine.GameObject}?]] {
-      return []
-    }
-
     // Default implementation of tick is to tick on all contained
     // game objects that have doesTick set to true
-    pub fun tick(input: GameEngine.GameTickInput, gameboard: [[{GameEngine.GameObject}?]]): GameEngine.GameTickOutput {
-      return GameEngine.GameTickOutput(
-        tickCount: input.tickCount,
-        objects: input.objects,
-        gameboard: gameboard,
-        state: input.state
-      )
+    pub fun tick(tickCount: UInt64, events: [GameEngine.PlayerEvent]) {
+      var keys = self.objects.keys
+      for key in keys {
+        let object = self.objects[key]!
+        if (self.objects[key]!.doesTick) {
+          let shouldRedraw = self.objects[key]!.tick(tickCount: tickCount, events: events, level: self)
+          if (shouldRedraw) {
+            self.gameboard.remove(object)
+            self.gameboard.add(self.objects[key]!)
+          }
+        }
+      }
+
     }
 
     // Default implementation of postTick is to do nothing
-    pub fun postTick(input: GameEngine.GameTickInput, gameboard: [[{GameEngine.GameObject}?]]): GameEngine.GameTickOutput {
-      return GameEngine.GameTickOutput(
-        tickCount: input.tickCount,
-        objects: input.objects,
-        gameboard: gameboard,
-        state: input.state
-      )
+    pub fun postTick(tickCount: UInt64, events: [GameEngine.PlayerEvent]) {
+      // do nothing
     }
 
     init() {
       self.boardWidth = 10
       self.boardHeight = 24
-      self.viewWidth = 10
-      self.viewHeight = 24
       self.tickRate = 1 // ideal ticks per second from the client
       self.state = {
         "score": "0"
       }
-      self.extras = {}
+      self.extras = {
+        "boardWidth": self.boardWidth,
+        "boardHeight": self.boardHeight
+      }
+      self.objects = {}
+      self.gameboard = GameEngine.GameBoard(
+        width: self.boardWidth,
+        height: self.boardHeight
+      )
     }
   }
 
