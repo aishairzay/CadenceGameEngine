@@ -57,6 +57,7 @@
 		},
 		"StringUtils": "cadence/contracts/StringUtils.cdc",
 		"Tetris": "cadence/contracts/Tetris.cdc",
+		"TetrisObjects": "cadence/contracts/TetrisObjects.cdc",
 		"TraditionalTetrisPieces": "cadence/contracts/TraditionalTetrisPieces.cdc"
 	},
 	"networks": {
@@ -86,6 +87,7 @@
 				"GamePieces",
 				"StringUtils",
 				"Tetris",
+				"TetrisObjects",
 				"TraditionalTetrisPieces"
 			]
 		}
