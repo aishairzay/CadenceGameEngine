@@ -7,9 +7,9 @@ The primary objective of this repository is to demonstrate the ability to run a 
 This approach aims to inspire the community with the potential of on-chain gaming. Although on-chain verifiability is not the primary focus at this stage, the architecture is designed with future compatibility in mind, suggesting that such features can be seamlessly integrated later.
 
 ### Example
-Provided in this repo is an example tetris game. 
+Provided in this repo is an example tetris game mastered in the `Tetris` Smart Contract (SC). This SC implements the `GameEngine.GameLevels` and has a single `StandardLevel` class within it which implements a `GameEngine.GameLevel`. A GameLevel is made up of `GameEngine.GameObject`s, 2 of which are implemented in the `TetrisObjects` contract.
+
+To run the example locally, clone this repo to your local, and run the emulator with `flow emulator` + `flow dev`. And then in another terminal, navigate to the `fe` folder, and run `npm start` to run the front-end locally.
 
 ### Workflow
-![Amit's Opinionated Single-Player Game Engine](https://github.com/aishairzay/CadenceGameEngine/assets/1332984/150df54b-6f6b-47bc-a2a1-44ed35415e31)
-
-This repo expands on the above by allowing a runner of the game to broadcast the game through socket.io to a client (and in the future to many clients) to enable a hosted multiplayer experience.
+![Amit's Opinionated Single-Player Game Engine (1)](https://github.com/aishairzay/CadenceGameEngine/assets/1332984/08f4bad3-f10c-4bda-a308-bb54491b4781)
