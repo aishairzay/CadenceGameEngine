@@ -1,7 +1,6 @@
 {
 	"contracts": {
 		"ArrayUtils": "cadence/contracts/ArrayUtils.cdc",
-		"AsteroidsGame": "cadence/contracts/AsteroidsGame.cdc",
 		"ExampleNFT": {
 			"source": "",
 			"aliases": {
@@ -79,7 +78,6 @@
 		"emulator": {
 			"default": [
 				"ArrayUtils",
-				"AsteroidsGame",
 				"GameBoardUtils",
 				"GameCatalog",
 				"GameEngine",

@@ -37,7 +37,9 @@ pub contract Tetris: GameLevels {
           "y": "4",
           "shape": shape,
           "rotation": "0",
-          "color": color
+          "color": color,
+          "dropRate": "5",
+          "lastDropTick": "0"
         }
       )
       return tetrisPiece
@@ -209,7 +211,7 @@ pub contract Tetris: GameLevels {
 
     init() {
       self.boardWidth = 10
-      self.boardHeight = 25
+      self.boardHeight = 20
       self.tickRate = 10 // ideal ticks per second from the client
       self.state = {
         "score": "0",
@@ -217,7 +219,8 @@ pub contract Tetris: GameLevels {
       }
       self.extras = {
         "boardWidth": self.boardWidth,
-        "boardHeight": self.boardHeight
+        "boardHeight": self.boardHeight,
+        "description": "A traditional tetris level w/ some bugs."
       }
       self.objects = {}
       self.gameboard = GameEngine.GameBoard(

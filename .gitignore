@@ -32,3 +32,7 @@ lerna-debug.log*
 
 # emulator datastore
 flowdb
+testnet-account.pkey
+mainnet-account.pkey
+testnet-levels-account.pkey
+mainnet-levels-account.pkey

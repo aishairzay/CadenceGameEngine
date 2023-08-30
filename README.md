@@ -7,9 +7,7 @@ The primary objective of this repository is to demonstrate the ability to run a 
 This approach aims to inspire the community with the potential of on-chain gaming. Although on-chain verifiability is not the primary focus at this stage, the architecture is designed with future compatibility in mind, suggesting that such features can be seamlessly integrated later.
 
 ### Example
-Provided in this repo are examples for 2 games, the first is an asteroids runner game where the player navigates left and right to dodge falling asteroids. If the player gets hit by an asteroid, the player is then removed from the board.
-
-The second is snake, where you can move in all 4 directions, collect food and avoid hitting your own tail or the edge of the map. 
+Provided in this repo is an example tetris game. 
 
 ### Workflow
 ![Amit's Opinionated Single-Player Game Engine](https://github.com/aishairzay/CadenceGameEngine/assets/1332984/150df54b-6f6b-47bc-a2a1-44ed35415e31)

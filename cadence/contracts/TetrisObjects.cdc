@@ -13,6 +13,8 @@ pub contract TetrisObjects {
     pub var referencePoint: [Int]
     pub var shape: String
     pub var rotation: Int?
+    pub var dropRate: UInt64
+    pub var lastDropTick: UInt64
     
     // Tetris-specific fields
     pub var color: String
@@ -31,6 +33,8 @@ pub contract TetrisObjects {
       self.relativePositions = []
       self.rotation = 0
       self.color = "white"
+      self.dropRate = 0 // Measured in ticks - 0 means it doesn't drop automatically
+      self.lastDropTick = UInt64(0)
     }
 
     // This gives the FE a way to represent the object on the board
@@ -48,7 +52,9 @@ pub contract TetrisObjects {
           "y": self.referencePoint[1]!.toString(),
           "shape": self.shape,
           "rotation": self.rotation!.toString(),
-          "color": self.color
+          "color": self.color,
+          "dropRate": self.dropRate.toString(),
+          "lastDropTick": self.lastDropTick.toString()
       }
     }
 
@@ -64,6 +70,8 @@ pub contract TetrisObjects {
       self.rotation = Int.fromString(map["rotation"]!)
       self.relativePositions = TraditionalTetrisPieces.getPiece(self.shape, self.rotation!)
       self.color = map["color"]!
+      self.dropRate = UInt64.fromString(map["dropRate"]!)!
+      self.lastDropTick = UInt64.fromString(map["lastDropTick"]!)!
     }
 
     pub fun tick(
@@ -102,8 +110,17 @@ pub contract TetrisObjects {
         if (e.type == "ArrowDown") {
           self.referencePoint[0] = self.referencePoint[0]! + 1
           needsRedraw = true
+          self.lastDropTick = tickCount
           break
         }
+      }
+      if (self.lastDropTick == 0) {
+        self.lastDropTick = tickCount
+      }
+      if (self.dropRate > 0 && tickCount - self.lastDropTick >= self.dropRate) {
+        self.referencePoint[0] = self.referencePoint[0]! + 1
+        needsRedraw = true
+        self.lastDropTick = tickCount
       }
       // Check for collisions. If we're redrawing that means theres a chance at a collision.
       if (needsRedraw) {
