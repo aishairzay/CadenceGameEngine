@@ -72,6 +72,20 @@
 		"emulator-account": {
 			"address": "f8d6e0586b0a20c7",
 			"key": "6d12eebfef9866c9b6fa92b97c6e705c26a1785b1e7944da701fc545a51d4673"
+		},
+		"testnet-account": {
+			"address": "2e9c374d550d1650",
+			"key": {
+				"type": "file",
+				"location": "testnet-account.pkey"
+			}
+		},
+		"testnet-levels-account": {
+			"address": "dcafeba3ddf31cee",
+			"key": {
+				"type": "file",
+				"location": "testnet-levels-account.pkey"
+			}
 		}
 	},
 	"deployments": {
@@ -84,9 +98,25 @@
 				"GameLevels",
 				"GamePieces",
 				"StringUtils",
-				"Tetris",
 				"TetrisObjects",
-				"TraditionalTetrisPieces"
+				"TraditionalTetrisPieces",
+				"Tetris"
+			]
+		},
+		"testnet": {
+			"testnet-account": [
+				"ArrayUtils",
+				"StringUtils",
+				"GameBoardUtils",
+				"GameCatalog",
+				"GameEngine",
+				"GameLevels",
+				"GamePieces"
+			],
+			"testnet-levels-account": [
+				"TetrisObjects",
+				"TraditionalTetrisPieces",
+				"Tetris"
 			]
 		}
 	}

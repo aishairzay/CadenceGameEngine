@@ -66,48 +66,70 @@ pub fun main(contractAddress: Address, contractName: String, levelName: String, 
 
 `
 
-const GAME_ADDRESS = "0x01cf0e2f2f715450";
-const replaceImports = (code) => {
+const replaceImports = (code, gameAddress) => {
   // replace lines that look like `import "GameLevels"` with "import GameLevels from GAME_ADDRESS"
   return code.replace(/import\s+"([^"]+)"/g, (match, p1) => {
-    return `import ${p1} from ${GAME_ADDRESS}`;
+    return `import ${p1} from ${gameAddress}`;
   })
 };
 
 class Game {
-  constructor(contractAddress, contractName, levelName, tickCallback) {
+  constructor(network, contractAddress, contractName, levelName, tickCallback) {
     this.contractAddress = contractAddress;
     this.contractName = contractName;
     this.levelName = levelName;
     this.callback = tickCallback;
     this.curEvents = [];
-    fcl.config().put("accessNode.api", "http://localhost:8888");
+    if (network === "emulator") {
+      fcl.config().put("accessNode.api", "http://localhost:8888");
+    } else if (network === "testnet") {
+      fcl.config().put("accessNode.api", "https://testnet.onflow.org");
+    } else if (network === "mainnet") {
+      fcl.config().put("accessNode.api", "https://mainnet.onflow.org");
+    } else {
+      fcl.config().put("accessNode.api", network)
+    }
   }
 
   async start() {
-    let lastResult = await fcl.send([
-      fcl.script`${replaceImports(startCode)}`,
-      fcl.args([
-        fcl.arg(this.contractAddress, t.Address),
-        fcl.arg(this.contractName, t.String),
-        fcl.arg(this.levelName, t.String)
-      ])
-    ]).then(fcl.decode)
-    this.callback(lastResult);
-
-    while(true) {
-      const beforeTime = new Date().getTime();
-      lastResult = await this.tick(lastResult);
+    try {
+      // Get the contract code in order to pull out the game engine contract address
+      const account = await fcl.account(fcl.withPrefix(this.contractAddress));
+      const contractCode = account.contracts[this.contractName];
+      // find the line in contract code where the text `import "GameEngine"` is
+      const gameEngineImportLine = contractCode.split("\n").find((line) => {
+        return line.includes(`import GameEngine`)
+      })
+      // extract the game engine address from the import line
+      const gameEngineAddress = gameEngineImportLine.split("from")[1].trim();
+      this.gameEngineAddress = gameEngineAddress;
+      
+      let lastResult = await fcl.send([
+        fcl.script`${replaceImports(startCode, this.gameEngineAddress)}`,
+        fcl.args([
+          fcl.arg(this.contractAddress, t.Address),
+          fcl.arg(this.contractName, t.String),
+          fcl.arg(this.levelName, t.String)
+        ])
+      ]).then(fcl.decode)
       this.callback(lastResult);
-      const curTime = new Date().getTime();
-      if (curTime - beforeTime < 200) {
-        // sleep for the leftover time
-        await new Promise((resolve) => {
-          setTimeout(() => {
-            resolve();
-          }, 200 - (curTime - beforeTime))
-        })
+
+      while(true) {
+        const beforeTime = new Date().getTime();
+        lastResult = await this.tick(lastResult);
+        this.callback(lastResult);
+        const curTime = new Date().getTime();
+        if (curTime - beforeTime < 200) {
+          // sleep for the leftover time
+          await new Promise((resolve) => {
+            setTimeout(() => {
+              resolve();
+            }, 200 - (curTime - beforeTime))
+          })
+        }
       }
+    } catch (e) {
+      console.log('Reached an error', e)
     }
 
   }
@@ -116,7 +138,7 @@ class Game {
     const eventsToSend = this.curEvents;
     this.curEvents = [];
     const result = await fcl.send([
-      fcl.script`${replaceImports(tickCode)}`,
+      fcl.script`${replaceImports(tickCode, this.gameEngineAddress)}`,
       fcl.args([
         fcl.arg(this.contractAddress, t.Address),
         fcl.arg(this.contractName, t.String),

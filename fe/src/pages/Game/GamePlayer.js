@@ -36,7 +36,7 @@ const createBoard = (boardWidth, boardHeight, colorMap) => {
   return board;
 };
 
-export default function GamePlayer({ address, contract, level }) {
+export default function GamePlayer({ network, address, contract, level }) {
   const [tickResult, setTickResult] = useState(null);
   useEffect(() => {
     if (!address || !contract || !level) {
@@ -44,6 +44,7 @@ export default function GamePlayer({ address, contract, level }) {
     }
     // start the game
     game = new Game(
+      network,
       address,
       contract,
       level,

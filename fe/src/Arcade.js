@@ -84,7 +84,7 @@ const router = createBrowserRouter([
     )
   },
   {
-    path: "/game/:address/:contract/:level",
+    path: "/game/:network/:address/:contract/:level",
     element: (
       <Game />
     )

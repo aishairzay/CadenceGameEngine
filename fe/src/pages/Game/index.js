@@ -5,12 +5,13 @@ import GamePlayer from './GamePlayer';
 
 export default function Game() {
   useEffect(() => {});
-  let { address, contract, level } = useParams();
+  let { network, address, contract, level } = useParams();
 
   return (
     <>
-      <h1>Playing {contract} - {level} hosted by {address}</h1>
+      <h1>Playing {contract} - {level} hosted by {address} on {network}</h1>
       <GamePlayer
+        network={network}
         address={address}
         contract={contract}
         level={level}
