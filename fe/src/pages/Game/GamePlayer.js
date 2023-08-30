@@ -8,7 +8,7 @@ const createBoard = (boardWidth, boardHeight, colorMap) => {
   for (let row = 0; row < boardHeight; row++) {
     const currentRow = [];
     for (let col = 0; col < boardWidth; col++) {
-      const color = colorMap && colorMap[row] && colorMap[row][col] ? colorMap[row][col].color : 'grey';
+      const color = colorMap && colorMap[row] && colorMap[row][col] ? colorMap[row][col].color : '#5A5A5A';
       currentRow.push(
         <div
           key={`${row}-${col}`}

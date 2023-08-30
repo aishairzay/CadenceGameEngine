@@ -1,5 +1,6 @@
 import "GameEngine"
 import "TraditionalTetrisPieces"
+import "GameBoardUtils"
 
 pub contract TetrisObjects {
   // GameObject for a TetrisPiece
@@ -68,13 +69,10 @@ pub contract TetrisObjects {
     pub fun tick(
       tickCount: UInt64,
       events: [GameEngine.PlayerEvent],
-      level: {GameEngine.Level}
-    ): Bool {
-
-      let handleCollision = fun (_ prev: {GameEngine.GameObject}?, _ cur: {GameEngine.GameObject},_ collisionMap: [[Int]]): {GameEngine.GameObject}? {
-        // do nothing
-        return nil
-      }
+      level: {GameEngine.Level},
+      callbacks: {String: ((AnyStruct?): AnyStruct?)}
+    ) {
+      var prevTetrimone = self
       var needsRedraw = false
       for e in events {
         if (e.type == "ArrowUp") {
@@ -107,7 +105,113 @@ pub contract TetrisObjects {
           break
         }
       }
-      return needsRedraw
+      // Check for collisions. If we're redrawing that means theres a chance at a collision.
+      if (needsRedraw) {
+        let collisionMap: [[Int]] = level.gameboard.getCollisionMap(self)
+        if (collisionMap.length > 0) {
+          // Remove the piece from the gameboard and from the level entirely
+          callbacks["remove"]!(prevTetrimone)
+          // Lock the piece in place into the locked piece
+          callbacks["expandLockedIn"]!(prevTetrimone)
+          // spawn a new piece
+          callbacks["spawn"]!(nil)
+        } else {
+          callbacks["redraw"]!({
+            "prev": prevTetrimone,
+            "new": self
+          })
+        }
+      }
+    }
+  }
+
+  pub struct LockedInTetrisPiece: GameEngine.GameObject {
+    // Standard fields
+    pub var id: UInt64
+    pub var type: String
+    pub var doesTick: Bool
+    pub var relativePositions: [[Int]]
+    pub var referencePoint: [Int]
+    pub var rotation: Int?
+    pub var color: String
+    
+    pub fun setColor(_ color: String) {
+      self.color = color
+    }
+    pub fun setID(_ id: UInt64) {
+      self.id = id
+    }
+    pub fun setRelativePositions(_ pos: [[Int]]) {
+      self.relativePositions = pos
+    }
+    pub fun setReferencePoint(_ point: [Int]) {
+      self.referencePoint = point
+    }
+
+    pub fun toMap(): {String: String} {
+      var doesTick = "false"
+      if (self.doesTick) {
+        doesTick = "true"
+      }
+      return {
+          "id": self.id.toString(),
+          "type": self.type,
+          "doesTick": doesTick,
+          "x": self.referencePoint[0]!.toString(),
+          "y": self.referencePoint[1]!.toString(),
+          "relativePositions": GameBoardUtils.convertRelativePositionsToString(self.relativePositions),
+          "color": self.color
+      }
+    }
+
+    pub fun expand(_ object: {GameEngine.GameObject}) {
+      var i = 0
+      while (i < object.relativePositions.length) {
+        var j = 0
+        while (j < object.relativePositions[i].length) {
+          let x = object.referencePoint[0]!
+          let y = object.referencePoint[1]!
+          let relativeX = x + i
+          let relativeY = y + j
+          if (object.relativePositions[i][j] == 1) {
+            var column = self.relativePositions[relativeX]!
+            column[relativeY] = 1
+            self.relativePositions[relativeX] = column
+          }
+          j = j + 1
+        }
+        i = i + 1
+      }
+    }
+
+    pub fun fromMap(_ map: {String: String}) {
+      self.id = UInt64.fromString(map["id"]!)!
+      self.type = map["type"]!
+      self.doesTick = (map["doesTick"]!) == "true"
+      let x = Int.fromString(map["x"]!)
+      let y = Int.fromString(map["y"]!)
+      self.referencePoint = [x!, y!]
+      self.relativePositions = GameBoardUtils.convertStringToRelativePositions(map["relativePositions"]!)
+      self.color = map["color"]!
+    }
+
+    pub fun tick(
+      tickCount: UInt64,
+      events: [GameEngine.PlayerEvent],
+      level: {GameEngine.Level},
+      callbacks: {String: ((AnyStruct?): AnyStruct?)}
+    ) {
+      // do nothing
+    }
+
+    init() {
+      self.id = UInt64(999999999)
+      self.type = "LockedInTetrisPiece"
+      self.doesTick = false
+      self.referencePoint = [0, 0]
+      self.relativePositions = []
+      self.rotation = 0
+      self.color = "black"
     }
   }
 }

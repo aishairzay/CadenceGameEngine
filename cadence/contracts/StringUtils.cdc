@@ -87,5 +87,13 @@ pub contract StringUtils {
         return joinedStr.slice(from: 0, upTo: joinedStr.length - separator.length)
     }
 
+    pub fun joinInts(_ ints: [Int], _ separator: String): String {
+        var joinedStr = ""
+        for s in ints {
+            joinedStr = joinedStr.concat(s.toString()).concat(separator)
+        }
+        return joinedStr.slice(from: 0, upTo: joinedStr.length - separator.length)
+    }
+
 
 }

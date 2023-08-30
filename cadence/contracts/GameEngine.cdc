@@ -8,7 +8,6 @@ pub contract GameEngine {
     pub var doesTick: Bool
     pub var referencePoint: [Int]
     pub var relativePositions: [[Int]]
-    pub var rotation: Int?
 
     pub fun toMap(): {String: String}
     pub fun fromMap(_ map: {String: String})
@@ -20,8 +19,11 @@ pub contract GameEngine {
     pub fun tick(
       tickCount: UInt64,
       events: [PlayerEvent],
-      level: {Level}
-    ): Bool
+      level: {Level},
+      callbacks: {
+        String: ((AnyStruct?): AnyStruct?)
+      }
+    )
   }
 
   pub struct GameObjectType {
@@ -122,57 +124,31 @@ pub contract GameEngine {
       }
     }
 
-    // Move a game object from one spot to another, updating the gameboard
-    // If there is a collision while moving, the provided callback function
-    // will be called if provided.
-    // 
-    // If the handleCollision callback returns a game object, the newly returned game object
-    // will be added to the board. If nil is provided, then the game object
-    // is just removed from the board.
-    pub fun moveOnGameboard(
-      _ gameObject: {GameObject}?,
-      _ newGameObject: {GameObject},
-      _ handleCollision: (({GameObject}?, {GameObject}, [[Int]]): {GameObject}?)
-    ) {
-      if (handleCollision != nil) {
-        var collision = false
-        // Check if the newGameObject collides with anything
-        var collisionMap: [[Int]] = []
-        var x = 0
-        var xLen = newGameObject.relativePositions.length
-        while (x < xLen) {
-          var y = 0
-          var yLen = newGameObject.relativePositions[x]!.length
-          while (y < yLen) {
-            if (newGameObject.relativePositions[x]![y]! == 0) {
-              y = y + 1
-            } else {
-              let curX = newGameObject.referencePoint[0]! + x
-              let curY = newGameObject.referencePoint[1]! + y
-              if (self.board[curX] != nil && self.board[curX]![curY] != nil) {
-                let point = [curX, curY]
-                collisionMap.append(point)
-                collision = true
-              }
-              y = y + 1
-            }
-          }
-          x = x + 1
-        }
-        if (collision) {
-          let postCollisionObject: {GameObject}? = handleCollision(gameObject, newGameObject, collisionMap)
-          if (postCollisionObject == nil) {
-            self.remove(gameObject)
+    pub fun getCollisionMap(_ gameObject: {GameObject}): [[Int]] {
+      var collisionMap: [[Int]] = []
+      var x = 0
+      let xLen = gameObject.relativePositions.length
+      while (x < xLen) {
+        var y = 0
+        let yLen = gameObject.relativePositions[x]!.length
+        while (y < yLen) {
+          if (gameObject.relativePositions[x]![y]! == 0) {
+            y = y + 1
           } else {
-            self.remove(gameObject)
-            self.add(postCollisionObject!)
+            let curX = gameObject.referencePoint[0]! + x
+            let curY = gameObject.referencePoint[1]! + y
+            if (self.board[curX] != nil &&
+                self.board[curX]![curY] != nil &&
+                self.board[curX]![curY]!?.id != gameObject.id
+            ) {
+              collisionMap.append([curX, curY])
+            }
+            y = y + 1
           }
-          return
         }
+        x = x + 1
       }
-      // default behavior if there is no blocking collision is to just move the object
-      self.remove(gameObject)
-      self.add(newGameObject)
+      return collisionMap
     }
 
     init(width: Int, height: Int) {
@@ -215,6 +191,7 @@ pub contract GameEngine {
         }
       }
     }
+
     pub fun setState(_ state: {String: String}) {
       self.state = state
     }

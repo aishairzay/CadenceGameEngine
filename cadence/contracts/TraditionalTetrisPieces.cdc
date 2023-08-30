@@ -11,6 +11,43 @@ pub contract TraditionalTetrisPieces {
     return pieceName
   }
 
+  pub fun getNextShape(_ curShape: String): String {
+    var i = 0
+    while (i < self.pieceMap.keys.length) {
+      if (self.pieceMap.keys[i] == curShape) {
+        break
+      }
+      i = i + 1
+    }
+    let nextShapeIndex = (i + 1) % self.pieceMap.keys.length
+    return self.pieceMap.keys[nextShapeIndex]!
+  }
+
+  pub fun getColorForShape(_ shape: String): String {
+    if (shape == "S") {
+      return "#00ff00"
+    }
+    if (shape == "L") {
+      return "#ffa500"
+    }
+    if (shape == "I") {
+      return "#00ffff"
+    }
+    if (shape == "O") {
+      return "#ffff00"
+    }
+    if (shape == "J") {
+      return "#0000ff"
+    }
+    if (shape == "T") {
+      return "#800080"
+    }
+    if (shape == "Z") {
+      return "#ff0000"
+    }
+    return "#ff0000"
+  }
+
   pub fun getPiece(_ name: String, _ rotation: Int): [[Int]] {
     return self.pieceMap[name]![rotation]!
   }
@@ -21,30 +58,122 @@ pub contract TraditionalTetrisPieces {
 
   init() {
     self.pieceMap = {
-      "S": {
+      "Z": {
         0: [
-          [1,1,0,0],
-          [0,1,1,0],
-          [0,0,0,0],
-          [0,0,0,0]
+          [0,1,1],
+          [1,1,0]
         ],
         1: [
-          [0,1,0,0],
-          [1,1,0,0],
-          [1,0,0,0],
-          [0,0,0,0]
+          [1,0],
+          [1,1],
+          [0,1]
         ],
         2: [
-          [0,1,1,0],
-          [1,1,0,0],
-          [0,0,0,0],
-          [0,0,0,0]
+          [0,1,1],
+          [1,1,0]
         ],
         3: [
-          [1,0,0,0],
-          [1,1,0,0],
-          [0,1,0,0],
-          [0,0,0,0]
+          [1,0],
+          [1,1],
+          [0,1]
+        ]
+      },
+      "I": {
+        0: [
+          [1,1,1,1]
+        ],
+        1: [
+          [1],
+          [1],
+          [1],
+          [1]
+        ],
+        2: [
+          [1,1,1,1]
+        ],
+        3: [
+          [1],
+          [1],
+          [1],
+          [1]
+        ]
+      },
+      "J": {
+        0: [
+          [1,1,1],
+          [0,0,1]
+        ],
+        1: [
+          [0,1],
+          [0,1],
+          [1,1]
+        ],
+        2: [
+          [1,0,0],
+          [1,1,1]
+        ],
+        3: [
+          [1,1],
+          [1,0],
+          [1,0]
+        ]
+      },
+      "O": {
+        0: [
+          [1,1],
+          [1,1]
+        ],
+        1: [
+          [1,1],
+          [1,1]
+        ],
+        2: [
+          [1,1],
+          [1,1]
+        ],
+        3: [
+          [1,1],
+          [1,1]
+        ]
+      },
+      "T": {
+        0: [
+          [1,1,1],
+          [0,1,0]
+        ],
+        1: [
+          [0,1],
+          [1,1],
+          [0,1]
+        ],
+        2: [
+          [0,1,0],
+          [1,1,1]
+        ],
+        3: [
+          [1,0],
+          [1,1],
+          [1,0]
+        ]
+      },
+      "S": {
+        0: [
+          [1,1,0],
+          [0,1,1]
+        ],
+        1: [
+          [0,1],
+          [1,1],
+          [1,0]
+        ],
+        2: [
+          [0,1,1],
+          [1,1,0]
+        ],
+        3: [
+          [1,0],
+          [1,1],
+          [0,1]
         ]
       },
       "L": {

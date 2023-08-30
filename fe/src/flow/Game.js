@@ -95,10 +95,20 @@ class Game {
     ]).then(fcl.decode)
     this.callback(lastResult);
 
-    setInterval(async () => {
+    while(true) {
+      const beforeTime = new Date().getTime();
       lastResult = await this.tick(lastResult);
       this.callback(lastResult);
-    }, 100);
+      const curTime = new Date().getTime();
+      if (curTime - beforeTime < 200) {
+        // sleep for the leftover time
+        await new Promise((resolve) => {
+          setTimeout(() => {
+            resolve();
+          }, 200 - (curTime - beforeTime))
+        })
+      }
+    }
 
   }
 
