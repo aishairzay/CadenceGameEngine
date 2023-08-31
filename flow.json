@@ -73,6 +73,20 @@
 			"address": "f8d6e0586b0a20c7",
 			"key": "6d12eebfef9866c9b6fa92b97c6e705c26a1785b1e7944da701fc545a51d4673"
 		},
+		"mainnet-account": {
+			"address": "9d041d36947924c0",
+			"key": {
+				"type": "file",
+				"location": "mainnet-account.pkey"
+			}
+		},
+		"mainnet-levels-account": {
+			"address": "7963a4eb8583241f",
+			"key": {
+				"type": "file",
+				"location": "mainnet-levels-account.pkey"
+			}
+		},
 		"testnet-account": {
 			"address": "2e9c374d550d1650",
 			"key": {
@@ -114,6 +128,22 @@
 				"GamePieces"
 			],
 			"testnet-levels-account": [
+				"TetrisObjects",
+				"TraditionalTetrisPieces",
+				"Tetris"
+			]
+		},
+		"mainnet": {
+			"mainnet-account": [
+				"ArrayUtils",
+				"StringUtils",
+				"GameBoardUtils",
+				"GameCatalog",
+				"GameEngine",
+				"GameLevels",
+				"GamePieces"
+			],
+			"mainnet-levels-account": [
 				"TetrisObjects",
 				"TraditionalTetrisPieces",
 				"Tetris"
