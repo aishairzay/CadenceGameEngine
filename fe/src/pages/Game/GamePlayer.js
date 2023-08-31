@@ -38,11 +38,27 @@ const createBoard = (boardWidth, boardHeight, colorMap) => {
 
 export default function GamePlayer({ network, address, contract, level }) {
   const [tickResult, setTickResult] = useState(null);
+  const [gameStarted, setGameStarted] = useState(false);
+
+  const startButtonStyle = {
+    padding: '10px 20px',
+    fontSize: '1em',
+    fontWeight: 'bold',
+    borderRadius: '5px',
+    backgroundColor: '#007bff',
+    color: 'white',
+    cursor: 'pointer',
+    border: 'none',
+    boxShadow: '0px 3px 5px rgba(0,0,0,0.2)',
+    marginBottom: '20px',
+    marginTop: '20px'
+  };
+
   useEffect(() => {
-    if (!address || !contract || !level) {
+    if (!address || !contract || !level || !gameStarted) {
       return;
     }
-    // start the game
+
     game = new Game(
       network,
       address,
@@ -50,46 +66,51 @@ export default function GamePlayer({ network, address, contract, level }) {
       level,
       (tickResult) => {
         console.log('Game tick result', tickResult);
-        setTickResult(tickResult)
+        setTickResult(tickResult);
       }
     );
+
     game.start();
     
     document.addEventListener("keyup", (event) => {
-      game.sendPlayerEvent(event.key)
+      game.sendPlayerEvent(event.key);
     });
-  }, [address, contract, level]);
-  
-  if (!tickResult || !tickResult.gameboard) {
-    return null
-  }
-  
 
-  const gameboard = tickResult.gameboard
-  const boardWidth = parseInt(tickResult.extras.boardWidth)
-  const boardHeight = parseInt(tickResult.extras.boardHeight)
-  var board = []
-  for (let i = 0; i < boardWidth; i++) {
-    board.push([])
-    for (let j = 0; j < boardHeight; j++) {
-      board[i].push(null)
-    }
-  }
-  
+    return () => {
+      // Cleanup
+      document.removeEventListener("keyup", game.sendPlayerEvent);
+    };
+
+  }, [address, contract, level, gameStarted]);
+
+  const startGame = () => {
+    setGameStarted(true);
+  };
+
   return (
-    <div style={{
-      width: '30%',
-      height: '100%',
-      marginBottom: '20px'
-    }}
-    >
-      {
-        tickResult && (
-          <div style={{ display: 'flex', flexDirection: 'column' }}>
-            {createBoard(boardWidth, boardHeight, gameboard)}
-          </div>
-        )
-      }
+    <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+      <div style={{ display: 'flex', justifyContent: 'center' }}>
+        <div style={{
+          width: 'fit-content',
+          marginBottom: '20px'
+        }}
+        >
+          {!gameStarted ? <button style={startButtonStyle} onClick={startGame}>Start Game</button> : null}
+          {tickResult && (
+            <div style={{ display: 'flex', flexDirection: 'column' }}>
+              {createBoard(parseInt(tickResult.extras.boardWidth), parseInt(tickResult.extras.boardHeight), tickResult.gameboard)}
+            </div>
+          )}
+        </div>
+        <div style={{ marginLeft: '20px' }}>
+          {tickResult && tickResult.extras.description && (
+            <p>{tickResult.extras.description}</p>
+          )}
+          {tickResult && tickResult.state.score && (
+            <p>Score: {tickResult.state.score}</p>
+          )}
+        </div>
+      </div>
     </div>
   );
 }

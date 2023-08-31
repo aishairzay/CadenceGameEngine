@@ -9,7 +9,8 @@ export default function Game() {
 
   return (
     <>
-      <h1>Playing {contract} - {level} hosted by {address} on {network}</h1>
+      <h1>Playing {contract} - {level}</h1>
+      <h3>Hosted by {address} on {network}</h3>
       <GamePlayer
         network={network}
         address={address}
