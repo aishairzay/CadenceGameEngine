@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import Game from '../../flow/Game';
+import useEmulator from './useEmulator';
 
 var game = null;
 
@@ -40,6 +41,13 @@ export default function GamePlayer({ network, address, contract, level }) {
   const [tickResult, setTickResult] = useState(null);
   const [gameStarted, setGameStarted] = useState(false);
 
+  const { emulator } = useEmulator();
+  useEffect( ()=>{
+    if (emulator){
+        console.log("emulator is set")
+    }
+ }, [emulator])
+
   const startButtonStyle = {
     padding: '10px 20px',
     fontSize: '1em',
@@ -55,31 +63,38 @@ export default function GamePlayer({ network, address, contract, level }) {
   };
 
   useEffect(() => {
+    
+  }, []);
+
+  useEffect(() => {
     if (!address || !contract || !level || !gameStarted) {
       return;
     }
 
-    game = new Game(
-      network,
-      address,
-      contract,
-      level,
-      (tickResult) => {
-        console.log('Game tick result', tickResult);
-        setTickResult(tickResult);
-      }
-    );
+    const run = async () => {
+      game = new Game(
+        network,
+        address,
+        contract,
+        level,
+        (tickResult) => {
+          console.log('Game tick result', tickResult);
+          setTickResult(tickResult);
+        }
+      );
 
-    game.start();
-    
-    document.addEventListener("keyup", (event) => {
-      game.sendPlayerEvent(event.key);
-    });
+      game.start(emulator);
+      
+      document.addEventListener("keyup", (event) => {
+        game.sendPlayerEvent(event.key);
+      });
 
-    return () => {
-      // Cleanup
-      document.removeEventListener("keyup", game.sendPlayerEvent);
-    };
+      return () => {
+        // Cleanup
+        document.removeEventListener("keyup", game.sendPlayerEvent);
+      };
+    }
+    run()
 
   }, [address, contract, level, gameStarted]);
 
@@ -95,7 +110,8 @@ export default function GamePlayer({ network, address, contract, level }) {
           marginBottom: '20px'
         }}
         >
-          {!gameStarted ? <button style={startButtonStyle} onClick={startGame}>Start Game</button> : null}
+          {!emulator && <div>Waiting for emulator to load...</div>}
+          {emulator && !gameStarted ? <button style={startButtonStyle} onClick={startGame}>Start Game</button> : null}
           {tickResult && (
             <div style={{ display: 'flex', flexDirection: 'column' }}>
               {createBoard(parseInt(tickResult.extras.boardWidth), parseInt(tickResult.extras.boardHeight), tickResult.gameboard)}

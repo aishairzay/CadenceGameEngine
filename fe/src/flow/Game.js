@@ -1,4 +1,5 @@
 import * as fcl from "@onflow/fcl";
+
 const t = require('@onflow/types');
 
 const startCode = 
@@ -91,10 +92,12 @@ class Game {
     }
   }
 
-  async start() {
+  async start(emulator) {
     try {
+      
+      
       // Get the contract code in order to pull out the game engine contract address
-      const account = await fcl.account(fcl.withPrefix(this.contractAddress));
+      /*const account = await fcl.account(fcl.withPrefix(this.contractAddress));
       const contractCode = account.contracts[this.contractName];
       // find the line in contract code where the text `import "GameEngine"` is
       const gameEngineImportLine = contractCode.split("\n").find((line) => {
@@ -127,7 +130,7 @@ class Game {
             }, 200 - (curTime - beforeTime))
           })
         }
-      }
+      }*/
     } catch (e) {
       console.log('Reached an error', e)
     }

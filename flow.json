@@ -54,6 +54,7 @@
 				"emulator": "f8d6e0586b0a20c7"
 			}
 		},
+		"PacmanObjects": "cadence/contracts/PacmanObjects.cdc",
 		"StringUtils": "cadence/contracts/StringUtils.cdc",
 		"Tetris": "cadence/contracts/Tetris.cdc",
 		"TetrisObjects": "cadence/contracts/TetrisObjects.cdc",
@@ -66,7 +67,7 @@
 	},
 	"accounts": {
 		"default": {
-			"address": "01cf0e2f2f715450",
+			"address": "f669cb8d41ce0c74",
 			"key": "6d12eebfef9866c9b6fa92b97c6e705c26a1785b1e7944da701fc545a51d4673"
 		},
 		"emulator-account": {
@@ -112,6 +113,23 @@
 				"GameLevels",
 				"GamePieces",
 				"StringUtils",
+				"Tetris",
+				"TetrisObjects",
+				"TraditionalTetrisPieces",
+				"PacmanObjects"
+			]
+		},
+		"mainnet": {
+			"mainnet-account": [
+				"ArrayUtils",
+				"StringUtils",
+				"GameBoardUtils",
+				"GameCatalog",
+				"GameEngine",
+				"GameLevels",
+				"GamePieces"
+			],
+			"mainnet-levels-account": [
 				"TetrisObjects",
 				"TraditionalTetrisPieces",
 				"Tetris"
@@ -128,22 +146,6 @@
 				"GamePieces"
 			],
 			"testnet-levels-account": [
-				"TetrisObjects",
-				"TraditionalTetrisPieces",
-				"Tetris"
-			]
-		},
-		"mainnet": {
-			"mainnet-account": [
-				"ArrayUtils",
-				"StringUtils",
-				"GameBoardUtils",
-				"GameCatalog",
-				"GameEngine",
-				"GameLevels",
-				"GamePieces"
-			],
-			"mainnet-levels-account": [
 				"TetrisObjects",
 				"TraditionalTetrisPieces",
 				"Tetris"

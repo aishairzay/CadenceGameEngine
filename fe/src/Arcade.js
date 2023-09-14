@@ -93,8 +93,6 @@ const router = createBrowserRouter([
 
 export default function Arcade() {
 
-  useEffect(() => {});
-
   return (
     <OuterContainer>
       <ContentContainer>
