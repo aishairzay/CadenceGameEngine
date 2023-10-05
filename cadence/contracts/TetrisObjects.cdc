@@ -50,6 +50,7 @@ pub contract TetrisObjects {
           "doesTick": doesTick,
           "x": self.referencePoint[0]!.toString(),
           "y": self.referencePoint[1]!.toString(),
+          "relativePositions": GameBoardUtils.convertRelativePositionsToString(self.relativePositions),
           "shape": self.shape,
           "rotation": self.rotation!.toString(),
           "color": self.color,

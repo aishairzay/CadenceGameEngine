@@ -1,70 +1,7 @@
 import * as fcl from "@onflow/fcl";
+import { startCode, tickCode } from "./Cadence";
 const t = require('@onflow/types');
 
-const startCode = 
-`
-import "GameLevels"
-import "GameEngine"
-import "GameBoardUtils"
-
-pub fun main(contractAddress: Address, contractName: String, levelName: String): AnyStruct {
-  let level: {GameEngine.Level} = GameEngine.startLevel(
-    contractAddress: contractAddress,
-    contractName: contractName,
-    levelName: levelName
-  )
-  let objects = GameEngine.convertGameObjectsToStrMaps(level.objects)
-  return {
-    "tickCount": 0,
-    "objects": objects,
-    "state": level.state,
-    "gameboard": level.gameboard.board,
-    "extras": level.extras
-  }
-}
-`
-
-const tickCode = 
-`
-import "GameLevels"
-import "GameEngine"
-import "GameBoardUtils"
-
-pub fun main(contractAddress: Address, contractName: String, levelName: String, lastTick: UInt64, gameObjects: [{String: String}], events: [String], state: {String: String}): AnyStruct {
-  let roLevel: {GameEngine.Level} = GameEngine.getLevel(contractAddress: contractAddress, contractName: contractName, levelName: levelName)
-  let gameObjects: [{GameEngine.GameObject}?] = roLevel.parseGameObjectsFromMaps(gameObjects)
-
-  // todo convert events to GameEngine.PlayerEvent
-  var playerEvents: [GameEngine.PlayerEvent] = []
-  for event in events {
-    playerEvents.append(GameEngine.PlayerEvent(event))
-  }
-
-  let gameInput: GameEngine.GameTickInput = GameEngine.GameTickInput(
-    tickCount: lastTick,
-    objects: gameObjects,
-    events: playerEvents,
-    state: state
-  )
-  let level: {GameEngine.Level} = GameEngine.tickLevel(
-    contractAddress: contractAddress,
-    contractName: contractName,
-    levelName: levelName,
-    input: gameInput
-  )
-
-  let objects = GameEngine.convertGameObjectsToStrMaps(level.objects)
-
-  return {
-    "tickCount": lastTick + 1,
-    "objects": objects,
-    "state": level.state,
-    "gameboard": level.gameboard.board,
-    "extras": level.extras
-  }
-}
-
-`
 
 const replaceImports = (code, gameAddress) => {
   // replace lines that look like `import "GameLevels"` with "import GameLevels from GAME_ADDRESS"
@@ -74,12 +11,20 @@ const replaceImports = (code, gameAddress) => {
 };
 
 class Game {
-  constructor(network, contractAddress, contractName, levelName, tickCallback) {
+  constructor(network, contractAddress, contractName, levelName, callback) {
     this.contractAddress = contractAddress;
     this.contractName = contractName;
     this.levelName = levelName;
-    this.callback = tickCallback;
-    this.curEvents = [];
+    this.curEvent = null;
+    this.tickCount = 1;
+    this.tickPredictions = {}; // Map of tick count to prediction, so we can run the game early on behalf of the player
+    this.tickResults = {}; // Map of tick count to result, so we can replay or rewind the game
+    this.lastTickTime = null;
+    this.predictionLength = 2;
+    this.lastExecutedTick = 0;
+    this.alreadyExecuting = -1;
+    this.callback = callback;
+    this.tickToEvent = {};
     if (network === "emulator") {
       fcl.config().put("accessNode.api", "http://localhost:8888");
     } else if (network === "testnet") {
@@ -112,38 +57,113 @@ class Game {
           fcl.arg(this.levelName, t.String)
         ])
       ]).then(fcl.decode)
-      this.callback(lastResult);
 
-      while(true) {
-        const beforeTime = new Date().getTime();
-        lastResult = await this.tick(lastResult);
-        this.callback(lastResult);
-        const curTime = new Date().getTime();
-        if (curTime - beforeTime < 200) {
-          // sleep for the leftover time
-          await new Promise((resolve) => {
-            setTimeout(() => {
-              resolve();
-            }, 200 - (curTime - beforeTime))
-          })
-        }
-      }
+      this.tickResults[0] = lastResult;
+
+      this.callback(lastResult)
+
+      this.executeTickAPILoop();
+
+      // Let the tick loop run its first iteration first, 1 second should be enough.
+      // TODO: Make the executetickapi return that first promise so that this is
+      // more deterministic.
+      setTimeout(() => {
+        this.executeGameLoop();
+      }, 1000)
+
     } catch (e) {
       console.log('Reached an error', e)
     }
 
   }
 
-  async tick(lastResult) {
-    const eventsToSend = this.curEvents;
-    this.curEvents = [];
+  async executeTickAPILoop() {
+    setInterval(() => {
+      if (this.tickCount <= this.lastExecutedTick || !this.tickResults[this.tickCount - 1]) {
+        return;
+      }
+      const lastResult = this.tickResults[this.tickCount - 1];
+      const eventToSend = this.tickToEvent[this.tickCount - 1]
+
+      if (this.alreadyExecuting === lastResult.tickCount) {
+        return;
+      }
+      this.alreadyExecuting = lastResult.tickCount;
+  
+      this.tickPromise = this.tick(lastResult, eventToSend).then((result) => {
+        const mostRecentResult = result[eventToSend || "NONE"]
+        const tick = mostRecentResult.tickCount
+        this.tickPredictions = result;
+        this.tickResults[tick] = mostRecentResult;
+        this.lastExecutedTick = parseInt(tick);
+      })
+    }, 100);
+  }
+
+  async executeGameLoop() {
+    // assume 300ms per tick for now for testing
+    const timePerTick = 100;
+
+    while (true) {
+
+      // Wait the tick time and then call the callback with the new game state
+      await new Promise((resolve) => {
+        setTimeout(() => {
+          resolve();
+        }, timePerTick)
+      })
+
+
+      // And if it is caught up, sleep until it isnt.
+      while (this.tickCount > this.lastExecutedTick + this.predictionLength) {
+        await new Promise((resolve) => {
+          setTimeout(() => {
+            resolve();
+          }, 10)
+        })
+      }
+
+
+      const curEventCode = this.curEvent ? this.curEvent : "NONE";
+      this.curEvent = null;
+      if (curEventCode !== "NONE") {
+        console.log("Got an event!")
+      }
+
+      console.log('Tick count is', this.tickCount, 'last executed tick is', this.lastExecutedTick, 'prediction length is', this.predictionLength)
+
+      // We should have all predictions for this tick. Grab the next prediction
+      // that corresponds with the user's input.
+
+      this.tickToEvent[this.tickCount] = curEventCode;
+      let key = []
+      for (let i = this.lastExecutedTick - 1; i < this.tickCount; i++) {
+        key.push(this.tickToEvent[i] || "NONE")
+      }
+      key = key.join(',')
+
+      this.tickResults[this.tickCount] = this.tickPredictions[key];
+
+      // Send the result to the UI callback
+      this.callback(this.tickResults[this.tickCount])
+
+      this.tickCount += 1;
+    }
+  }
+
+  async tick(lastResult, eventToSend) {
+    var eventsToSend = [];
+    if (eventToSend && eventToSend !== "NONE") {
+      eventsToSend = [eventToSend]
+    }
+    let tickToSend = lastResult ? parseInt(lastResult.tickCount) + 1 : 0;
     const result = await fcl.send([
       fcl.script`${replaceImports(tickCode, this.gameEngineAddress)}`,
       fcl.args([
         fcl.arg(this.contractAddress, t.Address),
         fcl.arg(this.contractName, t.String),
         fcl.arg(this.levelName, t.String),
-        fcl.arg(lastResult.tickCount, t.UInt64),
+        fcl.arg(tickToSend.toString(), t.UInt64),
         fcl.arg(
           lastResult.objects.map((obj) => {
             return Object.entries(obj).map(([k,v]) => {
@@ -164,12 +184,14 @@ class Game {
         )
       ])
     ]).then(fcl.decode)
+    
+    this.lastBaseTick = parseInt(lastResult.tickCount);
 
     return result;
   }
 
   async sendPlayerEvent(event) {
-    this.curEvents.push(event);
+    this.curEvent = event;
   }
 
   pause() {

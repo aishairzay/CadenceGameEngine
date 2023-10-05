@@ -57,14 +57,14 @@ pub contract Tetris: GameLevels {
         i = i + 1
       }
       var j = 0
-      var lockedInitialPositions: [[Int]] = []
-      while (j < self.boardHeight - 1) {
-        lockedInitialPositions.append(emptyRow)
+      var lockedInitialPositions: [Int] = []
+      while (j < self.boardWidth) {
+        lockedInitialPositions.append(1)
         j = j + 1
       }
-      lockedInitialPositions.append(fullRow)
-      lockedInTetrisPiece.setRelativePositions(lockedInitialPositions)
-      lockedInTetrisPiece.setReferencePoint([0, 0])
+
+      lockedInTetrisPiece.setRelativePositions([lockedInitialPositions])
+      lockedInTetrisPiece.setReferencePoint([self.boardHeight-1, 0])
 
       return [
         tetrisPiece,
@@ -220,7 +220,8 @@ pub contract Tetris: GameLevels {
       self.extras = {
         "boardWidth": self.boardWidth,
         "boardHeight": self.boardHeight,
-        "description": "A traditional tetris level w/ some bugs."
+        "description": "A traditional tetris level w/ some bugs.",
+        "possibleEventInputs": ["ArrowUp", "ArrowRight", "ArrowDown", "ArrowLeft"]
       }
       self.objects = {}
       self.gameboard = GameEngine.GameBoard(

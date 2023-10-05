@@ -1,3 +1,27 @@
+export const startCode = 
+`
+import "GameLevels"
+import "GameEngine"
+import "GameBoardUtils"
+
+pub fun main(contractAddress: Address, contractName: String, levelName: String): AnyStruct {
+  let level: {GameEngine.Level} = GameEngine.startLevel(
+    contractAddress: contractAddress,
+    contractName: contractName,
+    levelName: levelName
+  )
+  let objects = GameEngine.convertGameObjectsToStrMaps(level.objects)
+  return {
+    "tickCount": 0,
+    "objects": objects,
+    "state": level.state,
+    "extras": level.extras
+  }
+}
+`
+
+export const tickCode = `
+
 import "GameLevels"
 import "GameEngine"
 import "GameBoardUtils"
@@ -11,8 +35,6 @@ pub fun runTicks(
   _ maxDepth: Int,
   _ eventChain: String,
   _ tickResults: {String: AnyStruct}): {String: AnyStruct} {
-
-  log("runTicks running with depth:".concat(depth.toString()))
 
   if (depth == maxDepth) {
     return tickResults
@@ -70,8 +92,10 @@ pub fun main(contractAddress: Address, contractName: String, levelName: String, 
 
   // todo convert events to GameEngine.PlayerEvent
   var playerEvents: [GameEngine.PlayerEvent] = []
+  var eventToSend = "NONE"
   for event in events {
     playerEvents.append(GameEngine.PlayerEvent(event))
+    eventToSend = event
   }
 
   let tickResults: {String: AnyStruct} = {}
@@ -87,10 +111,12 @@ pub fun main(contractAddress: Address, contractName: String, levelName: String, 
       state: state
     ),
     0,
-    2,
-    "NONE",
+    3,
+    eventToSend,
     tickResults
   )
 
   return finalResults
 }
+
+`

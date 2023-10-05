@@ -63,7 +63,7 @@ pub contract GameEngine {
     pub var objects: [{String: String}]
     pub var gameboard: {Int: {Int: {GameObject}?}}
     pub let state: {String: String}
-
+  
     init(tickCount: UInt64, objects: [{String: String}], gameboard:{Int: {Int: AnyStruct{GameEngine.GameObject}?}}, state: {String: String}) {
       self.tickCount = tickCount
       self.objects = objects

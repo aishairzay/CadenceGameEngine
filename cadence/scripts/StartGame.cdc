@@ -13,7 +13,6 @@ pub fun main(contractAddress: Address, contractName: String, levelName: String):
     "tickCount": 0,
     "objects": objects,
     "state": level.state,
-    "gameboard": level.gameboard.board,
     "extras": level.extras
   }
 }

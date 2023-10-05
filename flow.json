@@ -112,6 +112,22 @@
 				"GameLevels",
 				"GamePieces",
 				"StringUtils",
+				"Tetris",
+				"TetrisObjects",
+				"TraditionalTetrisPieces"
+			]
+		},
+		"mainnet": {
+			"mainnet-account": [
+				"ArrayUtils",
+				"StringUtils",
+				"GameBoardUtils",
+				"GameCatalog",
+				"GameEngine",
+				"GameLevels",
+				"GamePieces"
+			],
+			"mainnet-levels-account": [
 				"TetrisObjects",
 				"TraditionalTetrisPieces",
 				"Tetris"
@@ -128,22 +144,6 @@
 				"GamePieces"
 			],
 			"testnet-levels-account": [
-				"TetrisObjects",
-				"TraditionalTetrisPieces",
-				"Tetris"
-			]
-		},
-		"mainnet": {
-			"mainnet-account": [
-				"ArrayUtils",
-				"StringUtils",
-				"GameBoardUtils",
-				"GameCatalog",
-				"GameEngine",
-				"GameLevels",
-				"GamePieces"
-			],
-			"mainnet-levels-account": [
 				"TetrisObjects",
 				"TraditionalTetrisPieces",
 				"Tetris"

@@ -36,6 +36,70 @@ const createBoard = (boardWidth, boardHeight, colorMap) => {
   return board;
 };
 
+const createGameboard = (boardWidth, boardHeight, objects) => {
+  let board = [];
+  for (let row = 0; row < boardHeight; row++) {
+    const currentRow = [];
+    for (let col = 0; col < boardWidth; col++) {
+      const color = '#5A5A5A';
+      currentRow.push(
+        <div
+          key={`${row}-${col}`}
+          style={{
+            width: '20px',
+            height: '20px',
+            border: '1px solid black',
+            backgroundColor: color
+          }}
+        ></div>
+      )
+    }
+    board.push(
+      <div 
+        key={row} 
+        style={{ 
+          display: 'flex',
+          flexDirection: 'row' 
+        }}
+      >
+        {currentRow}
+      </div>
+    );
+  }
+
+  for (let i in objects) {
+    const object = objects[i];
+    const color = object.color;
+    const positions = object.relativePositions.split('|').map((pos) => { return pos.split(',') });
+    for (let x in positions) {
+      const ys = positions[x];
+      for (let y in ys) {
+        const isTaken = ys[y];
+        if (isTaken && isTaken !== 0) {
+          const row = parseInt(object.x) + parseInt(x);
+          const col = parseInt(object.y) + parseInt(y);
+          if (board[row] && board[row].props && board[row].props.children && board[row].props.children[col]) {
+            board[row].props.children[col] = (
+              <div
+                key={`${row}-${col}`}
+                style={{
+                  width: '20px',
+                  height: '20px',
+                  border: '1px solid black',
+                  backgroundColor: color
+                }}
+              ></div>
+            );
+          }
+        }
+      }
+      
+    }
+
+  }
+  return board;
+};
+
 export default function GamePlayer({ network, address, contract, level }) {
   const [tickResult, setTickResult] = useState(null);
   const [gameStarted, setGameStarted] = useState(false);
@@ -65,7 +129,6 @@ export default function GamePlayer({ network, address, contract, level }) {
       contract,
       level,
       (tickResult) => {
-        console.log('Game tick result', tickResult);
         setTickResult(tickResult);
       }
     );
@@ -98,7 +161,7 @@ export default function GamePlayer({ network, address, contract, level }) {
           {!gameStarted ? <button style={startButtonStyle} onClick={startGame}>Start Game</button> : null}
           {tickResult && (
             <div style={{ display: 'flex', flexDirection: 'column' }}>
-              {createBoard(parseInt(tickResult.extras.boardWidth), parseInt(tickResult.extras.boardHeight), tickResult.gameboard)}
+              {createGameboard(parseInt(tickResult.extras.boardWidth), parseInt(tickResult.extras.boardHeight), tickResult.objects)}
             </div>
           )}
         </div>
