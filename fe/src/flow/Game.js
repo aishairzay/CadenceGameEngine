@@ -63,13 +63,7 @@ class Game {
       this.callback(lastResult)
 
       this.executeTickAPILoop();
-
-      // Let the tick loop run its first iteration first, 1 second should be enough.
-      // TODO: Make the executetickapi return that first promise so that this is
-      // more deterministic.
-      setTimeout(() => {
-        this.executeGameLoop();
-      }, 1000)
+      this.executeGameLoop();
 
     } catch (e) {
       console.log('Reached an error', e)
@@ -83,7 +77,11 @@ class Game {
         return;
       }
       const lastResult = this.tickResults[this.tickCount - 1];
-      const eventToSend = this.tickToEvent[this.tickCount - 1]
+      const eventToSend = this.tickToEvent[this.tickCount]
+
+      if (!eventToSend) {
+        return
+      }
 
       if (this.alreadyExecuting === lastResult.tickCount) {
         return;
@@ -93,16 +91,20 @@ class Game {
       this.tickPromise = this.tick(lastResult, eventToSend).then((result) => {
         const mostRecentResult = result[eventToSend || "NONE"]
         const tick = mostRecentResult.tickCount
-        this.tickPredictions = result;
+
+        // tick is tick
+
+        // set the predictions at our current tick to tickPredictions
+        this.tickPredictions[tick] = result;
         this.tickResults[tick] = mostRecentResult;
         this.lastExecutedTick = parseInt(tick);
       })
-    }, 100);
+    }, 10);
   }
 
   async executeGameLoop() {
     // assume 300ms per tick for now for testing
-    const timePerTick = 100;
+    const timePerTick = 300;
 
     while (true) {
 
@@ -113,8 +115,17 @@ class Game {
         }, timePerTick)
       })
 
+      const curEventCode = this.curEvent ? this.curEvent : "NONE";
+      this.curEvent = null;
 
-      // And if it is caught up, sleep until it isnt.
+      //console.log('Tick count is', this.tickCount, 'last executed tick is', this.lastExecutedTick, 'prediction length is', this.predictionLength)
+
+      // We should have all predictions for this tick. Grab the next prediction
+      // that corresponds with the user's input.
+
+      this.tickToEvent[this.tickCount] = curEventCode;
+
+      // Sleep until we are caught up/should have a result for this tick
       while (this.tickCount > this.lastExecutedTick + this.predictionLength) {
         await new Promise((resolve) => {
           setTimeout(() => {
@@ -123,26 +134,31 @@ class Game {
         })
       }
 
-
-      const curEventCode = this.curEvent ? this.curEvent : "NONE";
-      this.curEvent = null;
-      if (curEventCode !== "NONE") {
-        console.log("Got an event!")
-      }
-
-      console.log('Tick count is', this.tickCount, 'last executed tick is', this.lastExecutedTick, 'prediction length is', this.predictionLength)
-
-      // We should have all predictions for this tick. Grab the next prediction
-      // that corresponds with the user's input.
-
-      this.tickToEvent[this.tickCount] = curEventCode;
       let key = []
-      for (let i = this.lastExecutedTick - 1; i < this.tickCount; i++) {
-        key.push(this.tickToEvent[i] || "NONE")
+      let curPredictionTick = null
+
+      while (this.lastExecutedTick === 0 && !this.tickPredictions[1]) {
+        await new Promise((resolve) => {
+          setTimeout(() => {
+            resolve();
+          }, 10)
+        })
       }
+
+      //loop down from current in predictions, and if we have a prediction take it.
+      for (let i = this.tickCount; i >= this.lastExecutedTick; i--) {
+        if (this.tickPredictions[i]) {
+          curPredictionTick = i;
+          key = [(this.tickToEvent[i] || "NONE"), ...key]
+          break;
+        } else {
+          key = [(this.tickToEvent[i] || "NONE"), ...key]
+        }
+      }
+
       key = key.join(',')
 
-      this.tickResults[this.tickCount] = this.tickPredictions[key];
+      this.tickResults[this.tickCount] = this.tickPredictions[curPredictionTick][key];
 
       // Send the result to the UI callback
       this.callback(this.tickResults[this.tickCount])
@@ -181,6 +197,10 @@ class Game {
             return { key: k, value: v }
           }),
           t.Dictionary({ key: t.String, value: t.String })
+        ),
+        fcl.arg(
+          (this.predictionLength + 1).toString(),
+          t.Int
         )
       ])
     ]).then(fcl.decode)

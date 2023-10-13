@@ -38,7 +38,7 @@ pub contract Tetris: GameLevels {
           "shape": shape,
           "rotation": "0",
           "color": color,
-          "dropRate": "5",
+          "dropRate": "1",
           "lastDropTick": "0"
         }
       )

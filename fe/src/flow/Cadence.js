@@ -86,7 +86,7 @@ pub fun runTicks(
   
 }
 
-pub fun main(contractAddress: Address, contractName: String, levelName: String, lastTick: UInt64, gameObjects: [{String: String}], events: [String], state: {String: String}): AnyStruct {
+pub fun main(contractAddress: Address, contractName: String, levelName: String, lastTick: UInt64, gameObjects: [{String: String}], events: [String], state: {String: String}, predictionCount: Int): AnyStruct {
   let roLevel: {GameEngine.Level} = GameEngine.getLevel(contractAddress: contractAddress, contractName: contractName, levelName: levelName)
   let gameObjects: [{GameEngine.GameObject}?] = roLevel.parseGameObjectsFromMaps(gameObjects)
 
@@ -111,7 +111,7 @@ pub fun main(contractAddress: Address, contractName: String, levelName: String, 
       state: state
     ),
     0,
-    3,
+    predictionCount,
     eventToSend,
     tickResults
   )
