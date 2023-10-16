@@ -74,7 +74,7 @@ const createGameboard = (boardWidth, boardHeight, objects) => {
     for (let x in positions) {
       const ys = positions[x];
       for (let y in ys) {
-        const isTaken = ys[y];
+        const isTaken = parseInt(ys[y]);
         if (isTaken && isTaken !== 0) {
           const row = parseInt(object.x) + parseInt(x);
           const col = parseInt(object.y) + parseInt(y);
